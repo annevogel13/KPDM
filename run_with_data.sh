@@ -1,0 +1,78 @@
+#!/bin/sh
+# Pre-filled patient data runner for interactive.pl.
+#
+# Works like inference_checks.sh but drives interactive.pl instead of
+# querying tree.pl directly. Keys present in the data list are used without
+# prompting; missing keys trigger a yes/no question answered by piped input.
+#
+# Usage: ./run_with_data.sh
+
+# run <label> <patient-data> [answer ...]
+# Each extra argument after the data list is one piped yes/no answer.
+run() {
+    label="$1"; data="$2"; shift 2
+    printf '\n== %s ==\n' "$label"
+    printf '%s\n' "$@" | ./interactive.pl "$data" 2>&1 || true
+}
+
+# ── Complete records — no prompts triggered ───────────────────────────────────
+
+run "Intubated → expect ICU" \
+    "[wishes-icu_imc_wished,intubated-yes]"
+
+run "Patient declines ICU/IMC → expect ER / Normal Ward" \
+    "[wishes-icu_imc_not_wished]"
+
+run "Inspiratory stridor → expect ICU" \
+    "[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-yes]"
+
+run "Stabilized on NIV → expect IMC" \
+    "[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,\
+abnormal_resp_rate-yes,niv_needed-yes,patient_status-stabilized_on_niv]"
+
+run "Mottling → expect ICU" \
+    "[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,\
+abnormal_resp_rate-no,pneumothorax-no,external_bleeding-no,mottling-yes]"
+
+run "ECG abnormal, high-dose vasopressors → expect ICU" \
+    "[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,\
+abnormal_resp_rate-no,pneumothorax-no,external_bleeding-no,\
+mottling-no,severe_bradycardia-no,ecg_abnormalities-yes,\
+vasopressors_needed-yes,vasopressors_dose-high]"
+
+run "Stroke, no other critical findings → expect IMC" \
+    "[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,\
+abnormal_resp_rate-no,pneumothorax-no,external_bleeding-no,\
+mottling-no,severe_bradycardia-no,ecg_abnormalities-no,\
+intracranial_hemorrhage-no,gcs_below_10-no,stroke-yes]"
+
+run "Stable, outpatient possible → expect ER" \
+    "[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,\
+abnormal_resp_rate-no,pneumothorax-no,external_bleeding-no,\
+mottling-no,severe_bradycardia-no,ecg_abnormalities-no,\
+intracranial_hemorrhage-no,gcs_below_10-no,stroke-no,outpatient_possible-yes]"
+
+# ── Partial records — missing keys answered by piped input ────────────────────
+
+# Airway is documented (clear); breathing status unknown → two prompts
+# Answers: abnormal_resp_rate=yes, niv_needed=no → IMC
+run "Airway documented, breathing unknown → prompts 2 questions → expect IMC" \
+    "[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no]" \
+    "yes" "no"
+
+# Circulation partially documented; vasopressor details unknown → two prompts
+# Answers: vasopressors_needed=yes, vasopressors_dose high?=no (low) → IMC
+run "ECG abnormal (known), vasopressor details unknown → prompts 2 → expect IMC" \
+    "[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,\
+abnormal_resp_rate-no,pneumothorax-no,external_bleeding-no,\
+mottling-no,severe_bradycardia-no,ecg_abnormalities-yes]" \
+    "yes" "no"
+
+# Disability section partially documented; GCS/stroke/outpatient unknown → 3 prompts
+# Answers: gcs_below_10=no, stroke=no, outpatient_possible=no → Normal Ward
+run "ABCD clear except disability details → prompts 3 → expect Normal Ward" \
+    "[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,\
+abnormal_resp_rate-no,pneumothorax-no,external_bleeding-no,\
+mottling-no,severe_bradycardia-no,ecg_abnormalities-no,\
+intracranial_hemorrhage-no]" \
+    "no" "no" "no"

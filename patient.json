@@ -1,0 +1,20 @@
+{
+  "wishes":                null,
+  "intubated":             null,
+  "inspiratory_stridor":   null,
+  "abnormal_resp_rate":    null,
+  "niv_needed":            null,
+  "patient_status":        null,
+  "pneumothorax":          null,
+  "external_bleeding":     null,
+  "mottling":              null,
+  "severe_bradycardia":    null,
+  "ecg_abnormalities":     null,
+  "vasopressors_needed":   null,
+  "vasopressors_dose":     null,
+  "telemetry_available":   null,
+  "intracranial_hemorrhage": null,
+  "gcs_below_10":          null,
+  "stroke":                null,
+  "outpatient_possible":   null
+}
