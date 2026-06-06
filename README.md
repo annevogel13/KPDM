@@ -39,6 +39,33 @@ brew install swi-prolog
 
 **Run automated tests:**
 
+## patient.json values
+
+| Key                      | Accepted values                              |
+|--------------------------|----------------------------------------------|
+| `wishes`                 | `"icu_imc_wished"`, `"icu_imc_not_wished"`   |
+| `intubated`              | `"yes"`, `"no"`                              |
+| `inspiratory_stridor`    | `"yes"`, `"no"`                              |
+| `abnormal_resp_rate`     | `"yes"`, `"no"`                              |
+| `niv_needed`             | `"yes"`, `"no"`                              |
+| `patient_status`         | `"b_problem_persists"`, `"stabilized_on_niv"`|
+| `pneumothorax`           | `"yes"`, `"no"`                              |
+| `external_bleeding`      | `"yes"`, `"no"`                              |
+| `mottling`               | `"yes"`, `"no"`                              |
+| `severe_bradycardia`     | `"yes"`, `"no"`                              |
+| `ecg_abnormalities`      | `"yes"`, `"no"`                              |
+| `vasopressors_needed`    | `"yes"`, `"no"`                              |
+| `vasopressors_dose`      | `"high"`, `"low"`                            |
+| `telemetry_available`    | `"yes"`, `"no"`                              |
+| `intracranial_hemorrhage`| `"yes"`, `"no"`                              |
+| `gcs_below_10`           | `"yes"`, `"no"`                              |
+| `stroke`                 | `"yes"`, `"no"`                              |
+| `outpatient_possible`    | `"yes"`, `"no"`                              |
+
+Leave any key as `null` to be prompted for it during the session.
+
+**Run automated tests:**
+
 ```bash
 ./inference_checks.sh
 ./run_with_data.sh
