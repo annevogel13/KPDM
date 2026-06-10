@@ -4,10 +4,7 @@
 % Without arguments — asks the user for every attribute:
 %   ./interactive.pl
 %
-% With a filled-in patient JSON file — uses known values, asks only for missing ones:
-%   ./interactive.pl patient.json
 
-:- use_module(library(http/json)).
 :- consult('tree.pl').
 
 outcome_label(icu,              'ICU  - Intensive Care Unit').
@@ -18,25 +15,20 @@ outcome_label(emergency_surgery,'EMERGENCY SURGERY').
 outcome_label(er,               'ER  - Emergency Room / outpatient follow-up').
 outcome_label(normal_ward,      'Normal Ward').
 
-% Read patient data from a JSON file. Keys with null values are omitted
-% so that knowledge_base.pl will prompt for them interactively.
+% Parse patient data from command-line argument.
+% Accepts Prolog list notation: "[key1-val1,key2-val2,...]"
 patient_from_args(Patient) :-
-    current_prolog_flag(argv, [File|_]),
-    exists_file(File),
-    setup_call_cleanup(
-        open(File, read, Stream),
-        json_read(Stream, json(Pairs)),
-        close(Stream)
+    current_prolog_flag(argv, [DataArg|_]),
+    DataArg \= [],
+    catch(
+        atom_to_term(DataArg, Term, _),
+        _,
+        fail
     ),
-    include(non_null_pair, Pairs, Filled),
-    maplist(json_pair_to_patient, Filled, Patient),
+    Term = [_|_],
+    Patient = Term,
     !.
 patient_from_args([]).
-
-non_null_pair(_Key = Value) :- Value \= @null.
-
-json_pair_to_patient(Key = Value, Key-AtomValue) :-
-    ( atom(Value) -> AtomValue = Value ; term_to_atom(Value, AtomValue) ).
 
 :- initialization(main, main).
 

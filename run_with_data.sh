@@ -12,6 +12,8 @@
 run() {
     label="$1"; data="$2"; shift 2
     printf '\n== %s ==\n' "$label"
+
+    # Run interactive.pl with Prolog-style data and pipe answers
     printf '%s\n' "$@" | ./interactive.pl "$data" 2>&1 || true
 }
 
