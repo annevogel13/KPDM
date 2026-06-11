@@ -17,7 +17,14 @@ outcome_label(er_normal_ward,   'ER or Normal Ward  (patient declined ICU/IMC)')
 outcome_label(emergency_surgery,'EMERGENCY SURGERY').
 outcome_label(er,               'ER  - Emergency Room / outpatient follow-up').
 outcome_label(normal_ward,      'Normal Ward').
-
+outcome_label(imc_telemetry,    'Monitor on IMC to monitor after cardiac catheterization.').
+outcome_label(imc_neuro,        'Monitor on IMC due to reduced GCS and or vasopressors needed.').
+outcome_label(imc_C_prob,       'Monitor on IMC due to low dose vasopressors needed.').
+outcome_label(icu_intubated,    'Intubate as GCS < 10 has high likelihood of lacking adverse-effects reflexes').
+outcome_label(emergency_surgery_wish,      'Emergency surgery. Cave: Patient does not wish treatment on icu. Reevaluate patient wishes timely').
+outcome_label(palliation,      'Patient has critical bleeding and does not consent to Intubation neccessary for surgery. Start palliation.').
+outcome_label(reeval_treatment_term,      'Reevaluate treatment termination with next of kin. Patient does not wish invasive treatment on icu, critical external bleeding with requirement of immediate surgery with comorbid intracranial pathology with high probability of neurologic disability').
+outcome_label(CT_surgery,       'Conduct emergency CT due to abnormal neurostatus before conducting Emergency surgery.').
 % Read patient data from a JSON file. Keys with null values are omitted
 % so that knowledge_base.pl will prompt for them interactively.
 patient_from_args(Patient) :-
