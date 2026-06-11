@@ -25,7 +25,7 @@ patient_from_args(Patient) :-
     !.
 patient_from_args([]).
 
-non_null_pair(_Key = Value) :- Value \= @null.
+non_null_pair(_Key = Value) :- Value \= @(null).
 
 json_pair_to_patient(Key = Value, Key-AtomValue) :-
     ( atom(Value) -> AtomValue = Value ; term_to_atom(Value, AtomValue) ).

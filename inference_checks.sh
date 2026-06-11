@@ -11,69 +11,280 @@ run() {
   echo
 }
 
-# ── Root ────────────────────────────────────────────────────────────────────
-
-run "Patient declines ICU/IMC -> expect er_normal_ward" \
-  "decision_tree(start,[wishes-icu_imc_not_wished],R),writeln(R),halt."
+# Shorthand for a stable C/D profile (no critical findings, outpatient ok)
+# arrhythmia-no, ecg_abnormalities-no, gcs_below_13-no, stroke-no, outpatient_possible-yes
 
 # ── A – Airway ───────────────────────────────────────────────────────────────
 
-run "Intubated -> expect icu" \
-  "decision_tree(start,[wishes-icu_imc_wished,intubated-yes],R),writeln(R),halt."
+run "Intubated, symmetric lungs, stable C/D -> expect er" \
+  "decision_tree(start,[intubated-yes,lungs_vent_sym-yes,external_bleeding-no,\
+mottling-no,arrhythmia-no,ecg_abnormalities-no,gcs_below_13-no,stroke-no,\
+outpatient_possible-yes],R),writeln(R),halt."
 
-run "Inspiratory stridor (not intubated) -> expect icu" \
-  "decision_tree(start,[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-yes],R),writeln(R),halt."
+run "Intubated, asymmetric lungs, pneumothorax, stable C/D -> expect er" \
+  "decision_tree(start,[intubated-yes,lungs_vent_sym-no,pneumothorax-yes,\
+external_bleeding-no,mottling-no,arrhythmia-no,ecg_abnormalities-no,\
+gcs_below_13-no,stroke-no,outpatient_possible-yes],R),writeln(R),halt."
+
+run "Inspiratory stridor, intubated after eval, symmetric lungs, stable C/D -> expect er" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-yes,lungs_vent_sym-yes,\
+external_bleeding-no,mottling-no,arrhythmia-no,ecg_abnormalities-no,\
+gcs_below_13-no,stroke-no,outpatient_possible-yes],R),writeln(R),halt."
 
 # ── B – Breathing ────────────────────────────────────────────────────────────
 
-run "Abnormal resp rate, NIV needed, B-problem persists -> expect icu" \
-  "decision_tree(start,[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,abnormal_resp_rate-yes,niv_needed-yes,patient_status-b_problem_persists],R),writeln(R),halt."
+run "Abnormal rate, symmetric lungs, NIV needed, B-problem persists -> expect icu" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-yes,\
+lungs_vent_sym-yes,niv_needed-yes,patient_status-b_problem_persists],R),writeln(R),halt."
 
-run "Abnormal resp rate, NIV needed, stabilized on NIV -> expect imc" \
-  "decision_tree(start,[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,abnormal_resp_rate-yes,niv_needed-yes,patient_status-stabilized_on_niv],R),writeln(R),halt."
+run "Abnormal rate, symmetric lungs, NIV needed, stabilised on NIV, stable C/D -> expect er" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-yes,\
+lungs_vent_sym-yes,niv_needed-yes,patient_status-stabilized_on_niv,\
+external_bleeding-no,mottling-no,arrhythmia-no,ecg_abnormalities-no,\
+gcs_below_13-no,stroke-no,outpatient_possible-yes],R),writeln(R),halt."
 
-run "Abnormal resp rate, no NIV needed -> expect imc" \
-  "decision_tree(start,[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,abnormal_resp_rate-yes,niv_needed-no],R),writeln(R),halt."
+run "Abnormal rate, symmetric lungs, no NIV needed, stabilised, stable C/D -> expect er" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-yes,\
+lungs_vent_sym-yes,niv_needed-no,b_stabilized-yes,external_bleeding-no,\
+mottling-no,arrhythmia-no,ecg_abnormalities-no,gcs_below_13-no,stroke-no,\
+outpatient_possible-yes],R),writeln(R),halt."
 
-run "Normal resp rate, pneumothorax/thoracic drainage -> expect imc" \
-  "decision_tree(start,[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,pneumothorax-yes],R),writeln(R),halt."
+run "Abnormal rate, no NIV needed, not stabilised on O2, B-problem persists -> expect icu" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-yes,\
+lungs_vent_sym-yes,niv_needed-no,b_stabilized-no,\
+patient_status-b_problem_persists],R),writeln(R),halt."
+
+run "Abnormal rate, no NIV needed, not stabilised on O2, stabilised on NIV, stable C/D -> expect er" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-yes,\
+lungs_vent_sym-yes,niv_needed-no,b_stabilized-no,patient_status-stabilized_on_niv,\
+external_bleeding-no,mottling-no,arrhythmia-no,ecg_abnormalities-no,\
+gcs_below_13-no,stroke-no,outpatient_possible-yes],R),writeln(R),halt."
+
+run "Normal rate, asymmetric lungs, pneumothorax, stable C/D -> expect er" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-no,pneumothorax-yes,external_bleeding-no,mottling-no,arrhythmia-no,\
+ecg_abnormalities-no,gcs_below_13-no,stroke-no,outpatient_possible-yes],R),writeln(R),halt."
+
+run "Abnormal rate, asymmetric lungs, no pneumothorax, stable C/D -> expect er" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-yes,\
+lungs_vent_sym-no,pneumothorax-no,external_bleeding-no,mottling-no,arrhythmia-no,\
+ecg_abnormalities-no,gcs_below_13-no,stroke-no,outpatient_possible-yes],R),writeln(R),halt."
+
+run "Abnormal rate, asym lungs, pneumothorax, rate persists, NIV, B-problem persists -> expect icu" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-yes,\
+lungs_vent_sym-no,pneumothorax-yes,pers_abnormal_resp_rate-yes,niv_needed-yes,\
+patient_status-b_problem_persists],R),writeln(R),halt."
+
+run "Abnormal rate, asym lungs, pneumothorax, rate resolves, stable C/D -> expect er" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-yes,\
+lungs_vent_sym-no,pneumothorax-yes,pers_abnormal_resp_rate-no,external_bleeding-no,\
+mottling-no,arrhythmia-no,ecg_abnormalities-no,gcs_below_13-no,stroke-no,\
+outpatient_possible-yes],R),writeln(R),halt."
 
 # ── C – Circulation ──────────────────────────────────────────────────────────
 
-run "External bleeding needing surgery -> expect emergency_surgery" \
-  "decision_tree(start,[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,pneumothorax-no,external_bleeding-yes],R),writeln(R),halt."
+run "External bleeding, normal neuro -> expect emergency_surgery" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-yes,neuro_normal-yes],R),writeln(R),halt."
 
-run "Mottling -> expect icu" \
-  "decision_tree(start,[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,pneumothorax-no,external_bleeding-no,mottling-yes],R),writeln(R),halt."
+run "External bleeding, abnormal neuro -> expect ct_surgery" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-yes,neuro_normal-no],R),writeln(R),halt."
 
-run "Severe bradycardia (<45 bpm) -> expect icu" \
-  "decision_tree(start,[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,pneumothorax-no,external_bleeding-no,mottling-no,severe_bradycardia-yes],R),writeln(R),halt."
+run "Mottling, VP needed, low dose, no arrhythmia -> expect imc_c_prob" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-yes,vasopressors_needed-yes,\
+vasopressors_dose-low,arrhythmia-no],R),writeln(R),halt."
 
-run "ECG abnormalities, vasopressors needed, high dose -> expect icu" \
-  "decision_tree(start,[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,pneumothorax-no,external_bleeding-no,mottling-no,severe_bradycardia-no,ecg_abnormalities-yes,vasopressors_needed-yes,vasopressors_dose-high],R),writeln(R),halt."
+run "Mottling, VP needed, high dose, no arrhythmia, no ECG, stable D -> expect er" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-yes,vasopressors_needed-yes,\
+vasopressors_dose-high,arrhythmia-no,ecg_abnormalities-no,gcs_below_13-no,\
+stroke-no,outpatient_possible-yes],R),writeln(R),halt."
 
-run "ECG abnormalities, vasopressors needed, low dose -> expect imc" \
-  "decision_tree(start,[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,pneumothorax-no,external_bleeding-no,mottling-no,severe_bradycardia-no,ecg_abnormalities-yes,vasopressors_needed-yes,vasopressors_dose-low],R),writeln(R),halt."
+run "Mottling, VP needed, low dose, arrhythmia (brady, relevant), no ECG -> expect icu" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-yes,vasopressors_needed-yes,\
+vasopressors_dose-low,arrhythmia-yes,severe_bradycardia-yes,\
+bradycardia_hemodynamically_relevant-yes,ecg_abnormalities-no,gcs_below_13-no,\
+stroke-no],R),writeln(R),halt."
 
-run "ECG abnormalities, no vasopressors, telemetry available -> expect normal_ward" \
-  "decision_tree(start,[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,pneumothorax-no,external_bleeding-no,mottling-no,severe_bradycardia-no,ecg_abnormalities-yes,vasopressors_needed-no,telemetry_available-yes],R),writeln(R),halt."
+run "No mottling, arrhythmia (brady), not relevant, no ECG, stable D -> expect er" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-yes,\
+severe_bradycardia-yes,bradycardia_hemodynamically_relevant-no,\
+ecg_abnormalities-no,gcs_below_13-no,stroke-no,outpatient_possible-yes],\
+R),writeln(R),halt."
 
-run "ECG abnormalities, no vasopressors, no telemetry -> expect imc" \
-  "decision_tree(start,[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,pneumothorax-no,external_bleeding-no,mottling-no,severe_bradycardia-no,ecg_abnormalities-yes,vasopressors_needed-no,telemetry_available-no],R),writeln(R),halt."
+run "No mottling, arrhythmia (brady), relevant, no ECG -> expect icu" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-yes,\
+severe_bradycardia-yes,bradycardia_hemodynamically_relevant-yes,\
+ecg_abnormalities-no,gcs_below_13-no,stroke-no],R),writeln(R),halt."
+
+run "Arrhythmia (tachy), relevant, cardioversion stable, ECG, no post-cath VP, telemetry, stable D -> expect er" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-yes,\
+severe_bradycardia-no,tachycardia-yes,tachycardia_hemodynamically_relevant-yes,\
+cardioversion_stable-yes,ecg_abnormalities-yes,vasopressors_needed-no,\
+telemetry_available-yes,gcs_below_13-no,stroke-no,outpatient_possible-yes],\
+R),writeln(R),halt."
+
+run "No arrhythmia, ECG, post-cath VP high dose, GCS>=13, no stroke -> expect icu" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-no,\
+ecg_abnormalities-yes,vasopressors_needed-yes,vasopressors_dose-high,\
+gcs_below_13-no,stroke-no],R),writeln(R),halt."
+
+run "No arrhythmia, ECG, post-cath VP low dose, GCS>=13, no stroke -> expect imc_c_prob" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-no,\
+ecg_abnormalities-yes,vasopressors_needed-yes,vasopressors_dose-low,\
+gcs_below_13-no,stroke-no],R),writeln(R),halt."
+
+run "No arrhythmia, ECG, no post-cath VP, telemetry, stable D -> expect er" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-no,\
+ecg_abnormalities-yes,vasopressors_needed-no,telemetry_available-yes,\
+gcs_below_13-no,stroke-no,outpatient_possible-yes],R),writeln(R),halt."
+
+run "Mottling, VP high, arrhythmia (brady), no ECG, stable D -> expect icu" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-yes,vasopressors_needed-yes,\
+vasopressors_dose-high,arrhythmia-yes,severe_bradycardia-yes,\
+ecg_abnormalities-no,gcs_below_13-no,stroke-no],R),writeln(R),halt."
+
+run "Mottling, VP high, arrhythmia (tachy), no ECG, stable D -> expect icu" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-yes,vasopressors_needed-yes,\
+vasopressors_dose-high,arrhythmia-yes,severe_bradycardia-no,tachycardia-yes,\
+ecg_abnormalities-no,gcs_below_13-no,stroke-no],R),writeln(R),halt."
+
+run "Mottling, VP high, arrhythmia (other), cardioversion possible, stable -> expect er" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-yes,vasopressors_needed-yes,\
+vasopressors_dose-high,arrhythmia-yes,severe_bradycardia-no,tachycardia-no,\
+cardioversion_possible-yes,cardioversion_stable-yes,ecg_abnormalities-no,\
+gcs_below_13-no,stroke-no,outpatient_possible-yes],R),writeln(R),halt."
+
+run "Mottling, VP high, arrhythmia (other), no cardioversion, stable D -> expect icu" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-yes,vasopressors_needed-yes,\
+vasopressors_dose-high,arrhythmia-yes,severe_bradycardia-no,tachycardia-no,\
+cardioversion_possible-no,ecg_abnormalities-no,gcs_below_13-no,stroke-no],\
+R),writeln(R),halt."
+
+run "No mottling, arrhythmia (tachy), not relevant, no ECG, stable D -> expect er" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-yes,\
+severe_bradycardia-no,tachycardia-yes,tachycardia_hemodynamically_relevant-no,\
+ecg_abnormalities-no,gcs_below_13-no,stroke-no,outpatient_possible-yes],\
+R),writeln(R),halt."
+
+run "No mottling, arrhythmia (tachy), not relevant, ECG, stable D -> expect er" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-yes,\
+severe_bradycardia-no,tachycardia-yes,tachycardia_hemodynamically_relevant-no,\
+ecg_abnormalities-yes,vasopressors_needed-no,telemetry_available-yes,\
+gcs_below_13-no,stroke-no,outpatient_possible-yes],R),writeln(R),halt."
+
+run "No mottling, arrhythmia (other), relevant, cardioversion stable, stable D -> expect er" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-yes,\
+severe_bradycardia-no,tachycardia-no,arrhythmia_hemodynamically_relevant-yes,\
+cardioversion_stable-yes,ecg_abnormalities-no,gcs_below_13-no,stroke-no,\
+outpatient_possible-yes],R),writeln(R),halt."
+
+run "No mottling, arrhythmia (other), not relevant, no ECG, stable D -> expect er" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-yes,\
+severe_bradycardia-no,tachycardia-no,arrhythmia_hemodynamically_relevant-no,\
+ecg_abnormalities-no,gcs_below_13-no,stroke-no,outpatient_possible-yes],\
+R),writeln(R),halt."
+
+run "No arrhythmia, ECG, no post-cath VP, no telemetry, stable D -> expect er" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-no,\
+ecg_abnormalities-yes,vasopressors_needed-no,telemetry_available-no,\
+gcs_below_13-no,stroke-no,outpatient_possible-yes],R),writeln(R),halt."
 
 # ── D – Disability ───────────────────────────────────────────────────────────
 
-run "Intracranial hemorrhage -> expect emergency_surgery" \
-  "decision_tree(start,[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,pneumothorax-no,external_bleeding-no,mottling-no,severe_bradycardia-no,ecg_abnormalities-no,intracranial_hemorrhage-yes],R),writeln(R),halt."
+run "GCS < 13, intracranial hemorrhage -> expect emergency_surgery" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-no,\
+ecg_abnormalities-no,gcs_below_13-yes,intracranial_hemorrhage-yes],\
+R),writeln(R),halt."
 
-run "GCS < 10 -> expect icu_imc" \
-  "decision_tree(start,[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,pneumothorax-no,external_bleeding-no,mottling-no,severe_bradycardia-no,ecg_abnormalities-no,intracranial_hemorrhage-no,gcs_below_10-yes],R),writeln(R),halt."
+run "GCS < 10 (no intracranial) -> expect icu_intubated" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-no,\
+ecg_abnormalities-no,gcs_below_13-yes,intracranial_hemorrhage-no,gcs_below_10-yes],\
+R),writeln(R),halt."
 
-run "Stroke, no other critical findings -> expect imc" \
-  "decision_tree(start,[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,pneumothorax-no,external_bleeding-no,mottling-no,severe_bradycardia-no,ecg_abnormalities-no,intracranial_hemorrhage-no,gcs_below_10-no,stroke-yes],R),writeln(R),halt."
+run "GCS 10-12 (no intracranial) -> expect imc_neuro" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-no,\
+ecg_abnormalities-no,gcs_below_13-yes,intracranial_hemorrhage-no,gcs_below_10-no],\
+R),writeln(R),halt."
+
+run "Stroke, GCS>=13 -> expect imc" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-no,\
+ecg_abnormalities-no,gcs_below_13-no,stroke-yes],R),writeln(R),halt."
 
 run "Stable patient, outpatient treatment possible -> expect er" \
-  "decision_tree(start,[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,pneumothorax-no,external_bleeding-no,mottling-no,severe_bradycardia-no,ecg_abnormalities-no,intracranial_hemorrhage-no,gcs_below_10-no,stroke-no,outpatient_possible-yes],R),writeln(R),halt."
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-no,\
+ecg_abnormalities-no,gcs_below_13-no,stroke-no,outpatient_possible-yes],\
+R),writeln(R),halt."
 
 run "Stable patient, no outpatient option -> expect normal_ward" \
-  "decision_tree(start,[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,pneumothorax-no,external_bleeding-no,mottling-no,severe_bradycardia-no,ecg_abnormalities-no,intracranial_hemorrhage-no,gcs_below_10-no,stroke-no,outpatient_possible-no],R),writeln(R),halt."
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-no,\
+ecg_abnormalities-no,gcs_below_13-no,stroke-no,outpatient_possible-no],\
+R),writeln(R),halt."
+
+# D in high-VP context (reached from post-cath high dose or c_ecg_vp_high)
+run "Post-cath high VP, GCS>=13, stroke -> expect imc" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-no,\
+ecg_abnormalities-yes,vasopressors_needed-yes,vasopressors_dose-high,\
+gcs_below_13-no,stroke-yes],R),writeln(R),halt."
+
+run "Post-cath high VP, GCS>=13, no stroke -> expect icu" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-no,\
+ecg_abnormalities-yes,vasopressors_needed-yes,vasopressors_dose-high,\
+gcs_below_13-no,stroke-no],R),writeln(R),halt."
+
+run "Post-cath high VP, GCS<13, intracranial hemorrhage -> expect emergency_surgery" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-no,\
+ecg_abnormalities-yes,vasopressors_needed-yes,vasopressors_dose-high,\
+gcs_below_13-yes,intracranial_hemorrhage-yes],R),writeln(R),halt."
+
+run "Post-cath high VP, GCS<10 (no intracranial) -> expect icu" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-no,\
+ecg_abnormalities-yes,vasopressors_needed-yes,vasopressors_dose-high,\
+gcs_below_13-yes,intracranial_hemorrhage-no,gcs_below_10-yes],R),writeln(R),halt."
+
+run "Post-cath high VP, GCS 10-12 (no intracranial) -> expect icu_intubated" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-no,\
+ecg_abnormalities-yes,vasopressors_needed-yes,vasopressors_dose-high,\
+gcs_below_13-yes,intracranial_hemorrhage-no,gcs_below_10-no],R),writeln(R),halt."
+
+# D in low-VP context
+run "Post-cath low VP, GCS>=13, no stroke -> expect imc_c_prob" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-no,\
+ecg_abnormalities-yes,vasopressors_needed-yes,vasopressors_dose-low,\
+gcs_below_13-no,stroke-no],R),writeln(R),halt."
+
+run "Post-cath low VP, GCS>=13, stroke -> expect imc" \
+  "decision_tree(start,[intubated-no,inspiratory_stridor-no,abnormal_resp_rate-no,\
+lungs_vent_sym-yes,external_bleeding-no,mottling-no,arrhythmia-no,\
+ecg_abnormalities-yes,vasopressors_needed-yes,vasopressors_dose-low,\
+gcs_below_13-no,stroke-yes],R),writeln(R),halt."
