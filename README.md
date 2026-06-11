@@ -8,17 +8,15 @@ Prolog implementation of the ABCD triage decision tree (see `Visual decision tre
 - `knowledge_base.pl` — nodes, leaves, and conditions
 - `interactive.pl` — interactive triage session
 - `patient.json` — patient data template; fill in known values, leave unknowns as `null`
-- `inference_checks.sh` — automated test runner (direct tree queries with complete data, no prompts)
-- `run_with_data.sh` — interactive triage with pre-filled data (automatic run-through)
-- `run_patient_json.sh` — interactive triage with pre-filled patient data from JSON file
+- `inference_checks.sh` — automated regression tests (complete data, no prompts)
 
 ## Requirements
 
-Install SWI-Prolog:
+Install SWI-Prolog (includes the JSON library):
 
 ```bash
 # Ubuntu
-sudo apt install swi-prolog -y
+sudo apt install swi-prolog-nox -y
 
 # macOS
 brew install swi-prolog
@@ -28,102 +26,74 @@ brew install swi-prolog
 
 ### Interactive Triage (CLI)
 
-**Fully interactive** (prompts for all attributes):
+**Fully interactive** (prompts for every attribute):
 
 ```bash
 ./interactive.pl
 ```
 
-**With pre-filled data** (partial or complete, interactive for unknows):
+**With pre-filled patient data** (known values loaded from JSON, missing ones are prompted):
 
 ```bash
-./interactive.pl "[wishes-icu_imc_wished,intubated-yes]"
+./interactive.pl patient.json
 ```
 
-Missing attributes will trigger interactive prompts.
+Fill in any values you already know in `patient.json` and leave the rest as `null`.
 
-### Batch Testing
-
-**Test runner with pre-filled data**:
-
-```bash
-./run_with_data.sh
-```
-
-Runs multiple test cases with predefined patient data sets. Each test can provide partial data plus piped answers for missing attributes.
-
-**Test runner with JSON patient file**:
-
-```bash
-./run_patient_json.sh                 # uses patient.json by default
-./run_patient_json.sh custom_file.json  # use a different JSON file
-```
-
-Converts JSON patient data to Prolog format and runs interactive triage. Automatically filters out `null` values.
-
-**Automated inference tests** (complete data only, no prompts):
+### Automated Tests
 
 ```bash
 ./inference_checks.sh
 ```
 
-Direct tree queries with all attributes specified. Used for regression testing.
+Runs 45 regression tests covering every branch of the tree. All data is supplied inline — no prompts triggered.
 
-## patient.json values
+## Possible outcomes
 
-| Key                      | Accepted values                              |
-|--------------------------|----------------------------------------------|
-| `wishes`                 | `"icu_imc_wished"`, `"icu_imc_not_wished"`   |
-| `intubated`              | `"yes"`, `"no"`                              |
-| `inspiratory_stridor`    | `"yes"`, `"no"`                              |
-| `abnormal_resp_rate`     | `"yes"`, `"no"`                              |
-| `niv_needed`             | `"yes"`, `"no"`                              |
-| `patient_status`         | `"b_problem_persists"`, `"stabilized_on_niv"`|
-| `pneumothorax`           | `"yes"`, `"no"`                              |
-| `external_bleeding`      | `"yes"`, `"no"`                              |
-| `mottling`               | `"yes"`, `"no"`                              |
-| `severe_bradycardia`     | `"yes"`, `"no"`                              |
-| `ecg_abnormalities`      | `"yes"`, `"no"`                              |
-| `vasopressors_needed`    | `"yes"`, `"no"`                              |
-| `vasopressors_dose`      | `"high"`, `"low"`                            |
-| `telemetry_available`    | `"yes"`, `"no"`                              |
-| `intracranial_hemorrhage`| `"yes"`, `"no"`                              |
-| `gcs_below_10`           | `"yes"`, `"no"`                              |
-| `stroke`                 | `"yes"`, `"no"`                              |
-| `outpatient_possible`    | `"yes"`, `"no"`                              |
+| Outcome | Meaning |
+|---|---|
+| `icu` | ICU — Intensive Care Unit |
+| `icu_intubated` | ICU — Intubation required |
+| `imc` | IMC — Intermediate Care |
+| `imc_neuro` | IMC — Intermediate Care (Neurology) |
+| `imc_c_prob` | IMC — Intermediate Care (Cardiac monitoring) |
+| `emergency_surgery` | Emergency Surgery |
+| `ct_surgery` | CT Scan + Surgery planning |
+| `er` | Emergency Room / Outpatient |
+| `normal_ward` | Normal Ward |
+
+## patient.json keys
+
+| Key | Accepted values | Section |
+|---|---|---|
+| `intubated` | `"yes"`, `"no"` | A |
+| `inspiratory_stridor` | `"yes"`, `"no"` | A |
+| `abnormal_resp_rate` | `"yes"`, `"no"` | B |
+| `lungs_vent_sym` | `"yes"`, `"no"` | B |
+| `niv_needed` | `"yes"`, `"no"` | B |
+| `b_stabilized` | `"yes"`, `"no"` | B |
+| `patient_status` | `"b_problem_persists"`, `"stabilized_on_niv"` | B |
+| `pneumothorax` | `"yes"`, `"no"` | B |
+| `pers_abnormal_resp_rate` | `"yes"`, `"no"` | B |
+| `external_bleeding` | `"yes"`, `"no"` | C |
+| `neuro_normal` | `"yes"`, `"no"` | C |
+| `mottling` | `"yes"`, `"no"` | C |
+| `vasopressors_needed` | `"yes"`, `"no"` | C |
+| `vasopressors_dose` | `"high"`, `"low"` | C |
+| `arrhythmia` | `"yes"`, `"no"` | C |
+| `severe_bradycardia` | `"yes"`, `"no"` | C |
+| `bradycardia_hemodynamically_relevant` | `"yes"`, `"no"` | C |
+| `tachycardia` | `"yes"`, `"no"` | C |
+| `tachycardia_hemodynamically_relevant` | `"yes"`, `"no"` | C |
+| `arrhythmia_hemodynamically_relevant` | `"yes"`, `"no"` | C |
+| `cardioversion_possible` | `"yes"`, `"no"` | C |
+| `cardioversion_stable` | `"yes"`, `"no"` | C |
+| `ecg_abnormalities` | `"yes"`, `"no"` | C |
+| `telemetry_available` | `"yes"`, `"no"` | C |
+| `gcs_below_13` | `"yes"`, `"no"` | D |
+| `intracranial_hemorrhage` | `"yes"`, `"no"` | D |
+| `gcs_below_10` | `"yes"`, `"no"` | D |
+| `stroke` | `"yes"`, `"no"` | D |
+| `outpatient_possible` | `"yes"`, `"no"` | D |
 
 Leave any key as `null` to be prompted for it during the session.
-
-## Prolog Data Format
-
-When using `interactive.pl` directly or via `run_with_data.sh`, patient data is expressed as a Prolog list of key-value pairs:
-
-```prolog
-[wishes-icu_imc_wished,intubated-yes,inspiratory_stridor-no]
-```
-
-Each pair follows the format `key-value` where:
-
-- `key` is the attribute name (matches the `patient.json` keys)
-- `value` is the attribute value (see [patient.json values](#patientjson-values) table)
-
-**Examples:**
-
-Complete data (no prompts):
-
-```prolog
-[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no,abnormal_resp_rate-yes,niv_needed-yes,patient_status-stabilized_on_niv]
-```
-
-Partial data (missing attributes trigger prompts):
-
-```prolog
-[wishes-icu_imc_wished,intubated-no,inspiratory_stridor-no]
-```
-
-The `run_patient_json.sh` script automatically converts JSON to this format.
-
-```bash
-./inference_checks.sh
-./run_with_data.sh
-```

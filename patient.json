@@ -1,25 +1,28 @@
 {
-  "wishes":                              null,
-
   "intubated":                           null,
   "inspiratory_stridor":                 null,
 
   "abnormal_resp_rate":                  null,
   "lungs_vent_sym":                      null,
   "niv_needed":                          null,
+  "b_stabilized":                        null,
   "patient_status":                      null,
   "pneumothorax":                        null,
+  "pers_abnormal_resp_rate":             null,
 
   "external_bleeding":                   null,
+  "neuro_normal":                        null,
   "mottling":                            null,
   "vasopressors_needed":                 null,
   "vasopressors_dose":                   null,
-  "arrythmia":                           null,
+  "arrhythmia":                          null,
   "severe_bradycardia":                  null,
-  "tachycardia":                         null,
   "bradycardia_hemodynamically_relevant": null,
+  "tachycardia":                         null,
   "tachycardia_hemodynamically_relevant": null,
-  "arrythmia_hemodynamically_relevant":  null,
+  "arrhythmia_hemodynamically_relevant": null,
+  "cardioversion_possible":              null,
+  "cardioversion_stable":                null,
   "ecg_abnormalities":                   null,
   "telemetry_available":                 null,
 
